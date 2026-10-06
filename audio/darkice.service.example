@@ -1,0 +1,14 @@
+# Install as /etc/systemd/system/darkice.service after filling /etc/darkice.cfg.
+[Unit]
+Description=DarkIce Live Audio Encoder
+After=icecast2.service sound.target
+Wants=icecast2.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/darkice -c /etc/darkice.cfg
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

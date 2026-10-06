@@ -1,0 +1,5 @@
+-r requirements.txt
+pylast>=5,<7
+shazamio>=0.8,<1
+# pydub needs audioop on Python versions where the standard module was removed.
+audioop-lts>=0.2,<1; python_version >= "3.13"

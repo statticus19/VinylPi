@@ -1,0 +1,3 @@
+#EXTM3U
+#EXTINF:-1 tvg-id="vinyl" tvg-name="Vinyl" group-title="Music",Vinyl
+http://YOUR_PI_LAN_IP/vinyl/index.m3u8

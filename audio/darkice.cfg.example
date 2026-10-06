@@ -1,0 +1,25 @@
+[general]
+duration        = 0
+bufferSecs      = 1
+reconnect       = yes
+
+[input]
+# Find your capture device with arecord -l and arecord -L.
+# Use the same shared dsnoop device for any optional speaker passthrough.
+device          = dsnoop:CARD=YOUR_USB_CARD_ID,DEV=0
+sampleRate      = 48000
+bitsPerSample   = 16
+channel         = 2
+
+[icecast2-0]
+serverType      = icecast2
+bitrateMode     = cbr
+format          = mp3
+bitrate         = 320
+# Set this to the Icecast host; loopback is correct when both run on the Pi.
+server          = 127.0.0.1
+port            = 8000
+# Match <source-password> in your private Icecast configuration.
+password        = YOUR_SOURCE_PASSWORD
+mountPoint      = vinyl
+name            = Raspberry Pi Vinyl Stream

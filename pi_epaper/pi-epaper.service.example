@@ -1,0 +1,20 @@
+[Unit]
+Description=Last.fm e-paper bitmap service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Replace YOUR_PI_USER and paths with the account and directory you installed under.
+User=YOUR_PI_USER
+WorkingDirectory=/home/YOUR_PI_USER/vinyl-epaper/pi_epaper
+ExecStart=/home/YOUR_PI_USER/vinyl-epaper/pi_epaper/.venv/bin/python /home/YOUR_PI_USER/vinyl-epaper/pi_epaper/display_service.py
+Restart=on-failure
+RestartSec=10
+UMask=0077
+Environment=PYTHONUNBUFFERED=1
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
