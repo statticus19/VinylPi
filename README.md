@@ -39,12 +39,11 @@ Unknown artwork uses a record graphic. Driving estimates do not include live tra
 | --- | --- |
 | `pi_epaper/` | Dashboard, recognizer, configuration examples, services, tests, assets |
 | `firmware/CrowPanel_Remote_BMP/` | Working BMP downloader and Elecrow display drivers |
-| `audio/` | Sanitized DarkIce/Icecast configuration, speaker loop, and optional Plex service templates |
+| `audio/` | DarkIce/Icecast configuration, speaker loop, and optional Plex service templates |
 | `docs/AUDIO.md` | DarkIce, shared USB capture, Icecast, and stream metadata setup |
 | `docs/PLEX.md` | Supplied FFmpeg bridges and the remaining Plex/Threadfin integration steps |
 | `docs/FIRMWARE.md` | Arduino settings and display upload instructions |
-| `tools/` | Password-hash helper and public-package checks |
-| `legacy/` | Disabled, sanitized earlier recognizer; see [legacy review](docs/LEGACY.md) |
+| `legacy/` | Disabled, earlier recognizer; see [legacy review](docs/LEGACY.md) |
 
 
 
