@@ -9,7 +9,7 @@ album artwork when available. After ten minutes of
 confirmed Last.fm inactivity it shows weather, the next three calendar events,
 and a rotating information card.
 
-Examples below use demonstration data.
+Examples below.
 
 ![Now playing example](pi_epaper/demo/now_playing.png)
 ![Idle example](pi_epaper/demo/idle.png)
