@@ -1,6 +1,0 @@
-This replaces the earlier upload kit. The original prepublication checker incorrectly handled Windows backslash paths and flagged the safe password placeholder in config-examples/darkice.cfg.example. The checker now normalizes repository paths to POSIX separators. No security gates have been disabled.
-
-Extract this entire ZIP to a new folder, open PowerShell there, and run:
-  powershell -ExecutionPolicy Bypass -File .\PUSH-REVIEW-BRANCH.ps1
-
-The script uploads to public-release-review only, not main.

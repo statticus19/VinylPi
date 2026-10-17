@@ -211,7 +211,6 @@ class ProviderTests(unittest.TestCase):
     def test_daily_snow_indicator_even_when_current_conditions_are_clear(self):
         from dashboard import snowflake_icon, drop_icon
         cfg = json.loads((ROOT / "config.example.json").read_text())
-        cfg["weather"].update(latitude=40, longitude=-74)
         provider = Providers(cfg)
         payload = {"current": {"temperature_2m": 29, "apparent_temperature": 23,
                                "weather_code": 0, "is_day": 1, "uv_index": 1.2},
@@ -233,7 +232,6 @@ class ProviderTests(unittest.TestCase):
 
     def test_calendar_merge_all_day_timezones_and_refresh_timeout(self):
         cfg = json.loads((ROOT / "config.example.json").read_text())
-        cfg["timezone"] = "America/New_York"
         cfg["google"]["calendars"] = [{"id": "primary", "label": "Personal"},
                                       {"id": "shared", "label": "Shared"}]
         p = Providers(cfg)
@@ -252,7 +250,7 @@ class ProviderTests(unittest.TestCase):
         def fetch(url, params, headers):
             self.assertEqual(params["singleEvents"], "true")
             if "primary" in url:
-                return {"items": [{"summary": "Late", "location": "202 Example Ln, Sample City, ST 12345",
+                return {"items": [{"summary": "Late", "location": "202 McCrae Ln, Covington, KY 41011",
                                    "start": {"dateTime": "2026-10-06T19:00:00Z"}},
                                   {"summary": "Out of Office", "start": {"date": "2026-10-04"}},
                                   {"summary": "Cancelled", "status": "cancelled", "start": {"date": "2026-10-04"}}]}

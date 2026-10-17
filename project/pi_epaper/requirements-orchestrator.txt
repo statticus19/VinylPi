@@ -1,4 +1,0 @@
--r requirements.txt
-pylast>=5,<7
-shazamio>=0.8,<1
-audioop-lts>=0.2,<1; python_version >= "3.13"

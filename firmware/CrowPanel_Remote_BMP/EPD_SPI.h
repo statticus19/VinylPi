@@ -11,6 +11,12 @@
 #define CS 45
 #define BUSY 48
 
+//#define SCK 12
+//#define MOSI 11
+//#define RES 21
+//#define DC 9
+//#define CS 10
+//#define BUSY 48
 
 #define EPD_SCK_Clr() digitalWrite(SCK, LOW)
 #define EPD_SCK_Set() digitalWrite(SCK, HIGH)

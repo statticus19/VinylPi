@@ -232,6 +232,7 @@ class CornerRotation:
                            for kind, interval in (("uk", UK_REFRESH_SECONDS), ("stats", 900))}
         self.stats_day = self.cache.get("stats", {}).get("day")
         if self.cache.get("uk") and not self.cache["uk"].get("tv_checked"):
+            # One upgrade refresh populates the newly supported TV metadata.
             self.next_fetch["uk"] = 0
         self.note = ""
         self.token, self.pokemon_id = None, None

@@ -11,7 +11,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 LOG = logging.getLogger("routing")
-DEFAULT_ORIGIN = ""  # Set routing.origin_address or origin_coordinates in private config.json.
+DEFAULT_ORIGIN = "202 McCrae Ln, Covington, KY 41011"
 
 
 def request_json(url, params=None, headers=None, body=None):
@@ -114,10 +114,8 @@ class DriveTimes:
     def estimate(self, address):
         if not self.available():
             return {"drive_minutes": None, "drive_status": "key_missing"}
-        origin = self.config.get("origin_address", DEFAULT_ORIGIN) or ""
+        origin = self.config.get("origin_address", DEFAULT_ORIGIN)
         origin_override = self.config.get("origin_coordinates")
-        if not origin.strip() and origin_override is None:
-            return {"drive_minutes": None, "drive_status": "origin_missing"}
         key = self.cache_key("route:", [origin, origin_override, address,
                                        self.config.get("address_overrides", {}).get(address),
                                        self.config.get("address_overrides", {}).get(origin),
