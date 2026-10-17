@@ -13,16 +13,18 @@ from shazamio import Shazam
 from scrobble_guard import ScrobbleGuard, single_instance
 from music_metadata import AlbumResolver, publish_metadata
 from icecast_metadata import IcecastMetadata
+from learning_client import LearningClient
 
 ROOT = Path(__file__).resolve().parent
 
+# Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[logging.StreamHandler(sys.stdout)],
 )
 
-# Create an API account at https://www.last.fm/api/account/create; fill orchestrator.env locally.
+# Credentials are supplied by the environment, never embedded in this copy.
 API_KEY = os.environ.get("LASTFM_API_KEY", "")
 API_SECRET = os.environ.get("LASTFM_API_SECRET", "")
 USERNAME = os.environ.get("LASTFM_USERNAME", "")
@@ -30,12 +32,12 @@ PASSWORD_HASH = os.environ.get("LASTFM_PASSWORD_HASH", "")
 if not PASSWORD_HASH and os.environ.get("LASTFM_PASSWORD"):
     PASSWORD_HASH = pylast.md5(os.environ["LASTFM_PASSWORD"])
 
-ICECAST_MOUNT = os.environ.get("ICECAST_MOUNT", "/vinyl")
-ICECAST_URL = os.environ.get("ICECAST_URL", "http://127.0.0.1:8000").rstrip("/")
+ICECAST_MOUNT = "/vinyl"
+ICECAST_URL = "http://127.0.0.1:8000"
 
 TEMP_AUDIO = "/tmp/vinyl_sample.wav"
 STREAM_URL = f"{ICECAST_URL}{ICECAST_MOUNT}"
-SILENCE_THRESHOLD_DB = float(os.environ.get("SILENCE_THRESHOLD_DB", "-35"))  # Tune from logged sample levels.
+SILENCE_THRESHOLD_DB = -35.0  # Skip Shazam if quieter than this threshold
 
 def connect_lastfm():
   if not all((API_KEY, API_SECRET, USERNAME, PASSWORD_HASH)):
@@ -107,6 +109,7 @@ def capture_sample():
 
 async def main():
   record_recognition("unknown")
+  learner = LearningClient(ROOT / "state" / "learning", secrets=(API_KEY, API_SECRET, PASSWORD_HASH))
   shazam = Shazam()
   guard = ScrobbleGuard(ROOT / "state" / "orchestrator_scrobbles.json")
   network = connect_lastfm()
@@ -120,13 +123,25 @@ async def main():
   logging.info("Vinyl Orchestrator started. Entering monitoring loop...")
 
   while True:
+    cycle = None
     try:
+      cycle = learner.enter()
+      if cycle is None:
+        await asyncio.sleep(1)
+        continue
+      # Privacy pause may become active after enter() takes its shared lock.
+      # The dashboard waits for this cycle to drain before acknowledging pause.
+      if learner.privacy_paused():
+        await monitoring_sleep(1, learner, cycle)
+        continue
+      # Step 1: Capture 12-second audio sample
       logging.info("Capturing audio sample from stream...")
       if not capture_sample():
         record_recognition("error")
-        await asyncio.sleep(15)
+        await monitoring_sleep(15, learner, cycle)
         continue
 
+      # Step 2: Measure Volume (Silence Gate)
       volume_db = get_wav_rms_db(TEMP_AUDIO)
       logging.info(f"Sample audio level: {volume_db:.1f} dB")
 
@@ -139,9 +154,13 @@ async def main():
         if guard.silence(time.time()):
           icecast.update(label="Vinyl - Idle")
           logging.info("Sustained silence confirmed; the next match may start a new listening session.")
-        await asyncio.sleep(30)
+        await monitoring_sleep(30, learner, cycle)
         continue
 
+      if learner.privacy_paused():
+        await monitoring_sleep(1, learner, cycle)
+        continue
+      # Step 3: Identify Track with Shazam
       guard.audio(time.time())
       logging.info("Volume acceptable. Querying Shazam...")
       out = await shazam.recognize(TEMP_AUDIO)
@@ -152,10 +171,13 @@ async def main():
         raise ValueError("Malformed recognized track")
 
       if not track_info:
+        track_info = await asyncio.to_thread(learner.match, TEMP_AUDIO)
+
+      if not track_info:
         record_recognition("no_match")
         icecast.update(label="Vinyl - No match")
         logging.info("No match found for this audio snippet.")
-        await asyncio.sleep(45)
+        await monitoring_sleep(45, learner, cycle)
         continue
 
       title = track_info.get("title")
@@ -163,10 +185,13 @@ async def main():
       if not all(isinstance(value, str) and value.strip() for value in (artist, title)):
         record_recognition("unknown")
         logging.info("Incomplete recognition; skipping Last.fm submission.")
-        await asyncio.sleep(45)
+        await monitoring_sleep(45, learner, cycle)
         continue
       current_track_id = f"{artist} - {title}"
 
+      if learner.privacy_paused():
+        await monitoring_sleep(1, learner, cycle)
+        continue
       logging.info(f"MATCH FOUND: {current_track_id}")
       record_recognition("matched")
       metadata = albums.resolve(track_info)
@@ -183,13 +208,17 @@ async def main():
 
       # Renew now-playing on EVERY successful identification, including a
       # repeated match. The display reader relies on this status staying current.
-      if network:
+      if network and not learner.privacy_paused():
         try:
           network.update_now_playing(artist=artist, title=title, **extra)
         except Exception as e:
           logging.error("Last.fm now-playing update failed (%s)", type(e).__name__)
 
       # Now-playing renewals never reset persistent scrobble protection.
+      if learner.privacy_paused():
+        logging.info("Privacy pause requested; suppressing Last.fm scrobble.")
+        await monitoring_sleep(1, learner, cycle)
+        continue
       if network:
         timestamp = guard.claim(artist, title, time.time())
         if timestamp is not None:
@@ -206,17 +235,32 @@ async def main():
             logging.error("Scrobble result uncertain (%s); suppressing another submission for this session.", type(e).__name__)
           else:
             guard.result(True)
+            logging.info("Scrobble accepted by Last.fm: %s", current_track_id)
         else:
           logging.info("%s. Skipping scrobble.", guard.reason)
       else:
         logging.warning("Last.fm client not connected; skipping scrobble.")
 
-      await asyncio.sleep(60)
+      # Sleep 60 seconds before next check during active playback
+      await monitoring_sleep(60, learner, cycle)
 
     except Exception as e:
       record_recognition("error")
       logging.error(f"Unexpected error in orchestrator main loop: {e}")
-      await asyncio.sleep(30)
+      await monitoring_sleep(30, learner, cycle)
+    finally:
+      learner.leave(cycle)
+
+
+async def monitoring_sleep(seconds, learner, cycle):
+  learner.leave(cycle)
+  if not learner.directory.exists():
+    await asyncio.sleep(seconds)
+    return
+  for _ in range(seconds):
+    if learner.paused():
+      return
+    await asyncio.sleep(1)
 
 
 def record_recognition(status):

@@ -29,10 +29,10 @@ class EventTests(unittest.TestCase):
             "description": "https://teams.cloud.microsoft/meet/example"}), "Zoom/Teams")
 
     def test_physical_address_location_description_and_hybrid(self):
-        address = "202 Example Ln, Sample City, ST 12345"
+        address = "202 McCrae Ln, Covington, KY 41011"
         self.assertEqual(physical_address({"location": address}), address)
         self.assertEqual(physical_address({"description": "<p>Location: " + address + "</p>"}), address)
-        self.assertEqual(physical_address({"location": "202 Example Ln\nSample City, ST 12345"}), address)
+        self.assertEqual(physical_address({"location": "202 McCrae Ln\nCovington, KY 41011"}), address)
         self.assertEqual(physical_address({"location": "Conference room 123"}), "")
         self.assertEqual(physical_address({"location": "https://zoom.us/j/123456789"}), "")
         event = {"location": address, "description": "https://teams.microsoft.com/l/meetup-join/example"}
@@ -57,9 +57,7 @@ class RoutingTests(unittest.TestCase):
                         "google": {"calendars": [{"id": "dummy-work-calendar-id"}]}}
             path.write_text(json.dumps(original))
             with patch("display_service.ROOT", Path(directory)), \
-                 patch("getpass.getpass", return_value="dummy-routing-key"), \
-                 patch("builtins.input", return_value="202 Example Ln, Sample City, ST 12345"), \
-                 patch("builtins.print"):
+                 patch("getpass.getpass", return_value="dummy-routing-key"), patch("builtins.print"):
                 runpy.run_path(str(script), run_name="__main__")
             updated = json.loads(path.read_text())
             self.assertEqual(updated["lastfm"], original["lastfm"])
@@ -70,22 +68,22 @@ class RoutingTests(unittest.TestCase):
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
 
     def router(self, directory):
-        return DriveTimes({"api_key": "test-only", "origin_address": "202 Example Ln, Sample City, ST 12345",
+        return DriveTimes({"api_key": "test-only", "origin_address": "202 McCrae Ln, Covington, KY 41011",
                            "cache_file": "routes.json"}, directory)
 
     def test_duration_rounding_cache_reuse_and_persistence(self):
         with tempfile.TemporaryDirectory() as directory:
             router = self.router(directory)
-            with patch.object(router, "geocode", side_effect=[[-1.0, 51.0], [-1.1, 51.1]]), \
+            with patch.object(router, "geocode", side_effect=[[-84.53, 39.06], [-84.51, 39.1]]), \
                  patch("routing.request_json", return_value={"routes": [{"summary": {"duration": 1021}}]}) as api:
-                self.assertEqual(router.estimate("123 Main St, Sample City, ST 12345")["drive_minutes"], 18)
-                self.assertEqual(router.estimate("123 Main St, Sample City, ST 12345")["drive_minutes"], 18)
+                self.assertEqual(router.estimate("123 Main St, Covington, KY 41011")["drive_minutes"], 18)
+                self.assertEqual(router.estimate("123 Main St, Covington, KY 41011")["drive_minutes"], 18)
                 self.assertEqual(api.call_count, 1)
                 self.assertIn("api.heigit.org/openrouteservice", api.call_args.args[0])
-                self.assertEqual(api.call_args.kwargs["body"]["coordinates"][0], [-1.0, 51.0])
+                self.assertEqual(api.call_args.kwargs["body"]["coordinates"][0], [-84.53, 39.06])
             restarted = self.router(directory)
             with patch("routing.request_json", side_effect=AssertionError("Should use cache")):
-                self.assertEqual(restarted.estimate("123 Main St, Sample City, ST 12345")["drive_minutes"], 18)
+                self.assertEqual(restarted.estimate("123 Main St, Covington, KY 41011")["drive_minutes"], 18)
             self.assertEqual(Path(directory, "routes.json").stat().st_mode & 0o777, 0o600)
 
     def test_no_api_key_no_request_or_fabricated_estimate(self):
@@ -113,23 +111,23 @@ class RoutingTests(unittest.TestCase):
     def test_geocoder_rejects_wrong_house_and_postcode(self):
         with tempfile.TemporaryDirectory() as directory:
             router = self.router(directory)
-            features = [{"properties": {"housenumber": "203", "street": "Example Lane", "postalcode": "12345",
-                                        "confidence": 1}, "geometry": {"coordinates": [-1.0, 51.0]}}]
+            features = [{"properties": {"housenumber": "203", "street": "McCrae Lane", "postalcode": "41011",
+                                        "confidence": 1}, "geometry": {"coordinates": [-84.53, 39.06]}}]
             with patch("routing.request_json", return_value={"features": features}):
                 with self.assertRaises(ValueError):
                     router.geocode(router.config["origin_address"])
-                features[0]["properties"].update(housenumber="202", postalcode="54321")
+                features[0]["properties"].update(housenumber="202", postalcode="45202")
                 with self.assertRaises(ValueError):
                     router.geocode(router.config["origin_address"])
-                features[0]["properties"]["postalcode"] = "12345"
-                self.assertEqual(router.geocode(router.config["origin_address"]), [-1.0, 51.0])
+                features[0]["properties"]["postalcode"] = "41011"
+                self.assertEqual(router.geocode(router.config["origin_address"]), [-84.53, 39.06])
 
     def test_explicit_coordinates_bypass_geocoder(self):
         with tempfile.TemporaryDirectory() as directory:
             router = self.router(directory)
-            router.config["address_overrides"] = {"123 Main St": [-1.2, 51.1]}
+            router.config["address_overrides"] = {"123 Main St": [-84.5, 39.1]}
             with patch("routing.request_json", side_effect=AssertionError("No request")):
-                self.assertEqual(router.geocode("123 Main St"), [-1.2, 51.1])
+                self.assertEqual(router.geocode("123 Main St"), [-84.5, 39.1])
 
 
 class LayoutTests(unittest.TestCase):

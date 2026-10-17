@@ -1,0 +1,14 @@
+[Unit]
+Description=Vinyl Track Recognition & Last.fm Scrobbler
+After=darkice.service
+
+[Service]
+Type=simple
+User=vinyl
+WorkingDirectory=/home/vinyl/vinyl_orchestrator
+ExecStart=/usr/bin/python3 /home/vinyl/vinyl_orchestrator/orchestrator.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,10 @@
+{
+  "host": "0.0.0.0", "port": 5001, "timezone": "UTC",
+  "idle_seconds": 600, "lastfm_poll_seconds": 15,
+  "state_file": "state/playback.json",
+  "lastfm": {"username":"YOUR_LASTFM_USERNAME", "api_key":""},
+  "weather": {"label":"Local weather", "latitude":null, "longitude":null, "temperature_unit":"fahrenheit"},
+  "google": {"token_file":"token.json", "calendars":[{"id":"primary", "label":"Personal"}]},
+  "corner": {"enabled":true, "seconds":900, "uk":true, "stats":true, "sun":true, "pokemon":true},
+  "routing": {"enabled":false, "api_key":"", "origin_address":"", "origin_coordinates":null, "cache_seconds":86400, "cache_file":"state/routes.json", "address_overrides":{}}
+}

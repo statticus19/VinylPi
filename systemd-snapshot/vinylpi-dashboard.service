@@ -1,0 +1,21 @@
+[Unit]
+Description=VinylPi Dashboard (read-only foundation)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vinyl
+WorkingDirectory=/home/vinyl/vinylpi-dashboard
+EnvironmentFile=/etc/vinylpi-dashboard.env
+ExecStart=/home/vinyl/vinylpi-dashboard/.venv/bin/uvicorn dashboard.main:app --host 127.0.0.1 --port 8780
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

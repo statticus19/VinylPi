@@ -1,0 +1,43 @@
+{% extends 'base.html' %}{% block title %}Overview · VinylPi{% endblock %}{% block body %}
+{% set failed = units|selectattr('health','equalto','failed')|list|length %}{% set warnings = units|selectattr('health','equalto','warning')|list|length %}
+<section class="health-overview art-bearing"><div class="section-heading"><div><div class="eyebrow">Overview</div><h1>System health</h1></div><div class="health-right"><span class="status {{'failed' if failed else 'warning' if warnings else 'active'}}">{{'Attention needed' if failed or warnings else 'Healthy'}}</span><span class="muted small">{{units|selectattr('active','equalto','active')|list|length}} active · {{units|length}} services</span></div></div>
+<div class="metric-grid">
+{% for label,key,suffix in [('Memory','memory_percent','%'),('Disk','disk_percent','%'),('Temperature','temperature_c','°C')] %}
+{% set val=metrics.get(key) %}{% set limit_warning= 75 if key=='memory_percent' else 80 if key=='disk_percent' else 70 %}{% set limit_critical=90 if key=='memory_percent' else 90 if key=='disk_percent' else 80 %}
+<div class="metric-card {{'metric-critical' if val is not none and val>=limit_critical else 'metric-warning' if val is not none and val>=limit_warning else ''}}"><div class="eyebrow">{{label}}</div><div class="metric">{{val if val is not none else '—'}}{{suffix if val is not none else ''}}</div><div class="metric-bar" aria-hidden="true"><div style="width: {{ ([val,100]|min) if val is not none else 0 }}%"></div></div></div>
+{% endfor %}
+{% set cpu=metrics.get('cpu_percent') %}<div class="metric-card {{'metric-critical' if cpu is not none and cpu>=95 else 'metric-warning' if cpu is not none and cpu>=85 else ''}}"><div class="eyebrow">CPU usage</div><div class="metric">{{cpu if cpu is not none else '—'}}{{'%' if cpu is not none else ''}}</div><div class="metric-bar" aria-hidden="true"><div style="width: {{ ([cpu,100]|min) if cpu is not none else 0 }}%"></div></div></div>
+<div class="metric-card"><div class="eyebrow">Uptime</div><div class="metric">{{metrics.get('uptime_hours','—')}} <span class="metric-unit">h</span></div><div class="metric-note">Since last boot</div></div>
+</div><p class="muted small metric-footnote">Warning levels: memory ≥75%, disk ≥80%, temperature ≥70°C. Critical: memory/disk ≥90%, temperature ≥80°C.</p></section>
+<section class="section system-actions" aria-label="Connectivity and power">
+<div class="connectivity-row">
+  <div class="private-network-block">
+    <span class="eyebrow private-network-heading">Private network ↗</span>
+    <div class="private-network-links">
+      <a class="status private-network-pill {{'active' if tailscale.connected else 'failed'}}"
+         href="https://console.tailscale.com/admin/machines"
+         target="_blank" rel="noopener noreferrer"
+         aria-label="Tailscale {{tailscale.label}} — open Tailscale machines console in a new tab">
+        Tailscale {{tailscale.label}}
+      </a>
+      <a id="epaper-overview-status" class="status private-network-pill {{'active' if physical_epaper.state == 'online' else 'failed' if physical_epaper.state == 'offline' else 'warning'}}" href="/display" aria-live="polite">E-paper {{'Online' if physical_epaper.state == 'online' else 'Offline' if physical_epaper.state == 'offline' else 'Unknown'}}</a>
+    </div>
+  </div>
+  <form method="post" action="/system/reboot" data-confirm-reboot="true"><input type="hidden" name="csrf" value="{{csrf}}"><input type="hidden" name="confirmation" value="REBOOT"><button type="submit" class="danger">Reboot Raspberry Pi</button></form></div>
+{% if system_message %}<p role="alert" class="muted small">{{system_message}}</p>{% endif %}</section>
+<section class="listening-panel" id="listening" aria-label="Privacy listening controls">
+<div class="listening-details"><span class="eyebrow">Vinyl listening</span><h2>{{ 'Privacy pause active' if privacy.paused else 'Recognition and scrobbling active' }}</h2>
+<p class="muted small">{{ 'No new Last.fm activity will start while privacy pause is active. Your live audio continues playing.' if privacy.paused else 'Pause recognition and Last.fm activity without stopping your speakers or stream.' }}</p>
+{% if privacy.error %}<p class="pause-error" role="alert">{{privacy.error}} — fail-safe pause assumed.</p>{% endif %}
+{% if pause_message %}<p class="muted small" role="status">{{pause_message}}</p>{% endif %}</div>
+<form action="/listening/{{'resume' if privacy.paused else 'pause'}}" method="post" {% if not privacy.paused %}data-confirm-pause="true"{% endif %}><input type="hidden" name="csrf" value="{{csrf}}"><button class="listening-button" type="submit">{{'Resume Listening' if privacy.paused else 'Pause Listening'}}</button></form>
+</section>
+<section class="section"><div class="section-heading"><h2>Core services</h2><a class="text-link" href="/services">See all →</a></div><div class="service-snapshot">{% for item in units if item.unit in ['music-bridge.service','vinyl-learning.service','vinyl-orchestrator.service','pi-epaper.service','icecast2.service','vinylpi-dashboard.service'] %}<a class="snapshot-item" href="/services/{{item.unit}}"><span class="status {{item.health}}">{{item.health_label}}</span><span><strong>{{item.unit}}</strong><small class="snapshot-description">{{item.description}}</small></span><span aria-hidden="true">›</span></a>{% endfor %}</div></section>
+
+
+
+
+
+
+<script defer src="/static/e-paper-overview.js?v=1"></script>
+{% endblock %}

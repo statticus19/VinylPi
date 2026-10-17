@@ -1,4 +1,4 @@
-// Download a 400x300 bitmap from the Pi and refresh when pixels change.
+// CrowPanel Remote BMP v3 - exact refresh sequence from known-good weather sketch
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
@@ -6,7 +6,8 @@
 #include "EPD.h"
 #include "EPD_GUI.h"
 
-#include "secrets.h"  // Copy secrets.example.h and fill in your Wi-Fi and Pi URL locally.
+// Create secrets.h from secrets.example.h; never commit secrets.h.
+#include "secrets.h"
 constexpr uint32_t POLL_MS = 30000;
 constexpr size_t FRAME_BYTES = 15000;
 constexpr size_t MAX_BMP_BYTES = 500000;
@@ -82,7 +83,7 @@ bool fetchBMP() {
   HTTPClient http;
   http.setConnectTimeout(5000);
   http.setTimeout(10000);
-  if (!http.begin(client, BMP_URL)) return false;
+  if (!http.begin(client, IMAGE_URL)) return false;
   int status = http.GET();
   Serial.printf("HTTP status: %d\n", status);
   if (status != HTTP_CODE_OK) { http.end(); return false; }
@@ -94,7 +95,7 @@ bool fetchBMP() {
                 psramFound() ? "yes" : "no",
                 unsigned(ESP.getFreePsram()), unsigned(ESP.getFreeHeap()));
   if (contentLength <= 0) {
-    Serial.println("Server must send Content-Length for this client");
+    Serial.println("Server must send Content-Length for this test build");
     http.end(); return false;
   }
   const size_t capacity = size_t(contentLength);
@@ -178,12 +179,14 @@ void checkImage() {
     return;
   }
 
-  Serial.println("New image; refreshing display");
+  Serial.println("New image; using the SAME refresh path as the known-good weather sketch");
 
-  // Select the decoded framebuffer without clearing its pixels.
+  // Paint_NewImage only tells the GUI library which framebuffer is active.
+  // It does NOT erase or alter Image_BW.
   Paint_NewImage(Image_BW, EPD_W, EPD_H, 0, WHITE);
 
-  // Keep these reset/init/refresh/sleep delays for this panel.
+  // This sequence intentionally matches UI_weather_forecast() from the
+  // user's known-good Elecrow weather project.
   Serial.println("EPD: reset");
   EPD_RESET();
   delay(100);
@@ -193,8 +196,9 @@ void checkImage() {
   delay(300);
 
   Serial.println("EPD: EPD_Display_Fast()");
-  EPD_Display_Fast(Image_BW);
+  EPD_Display_Fast(Image_BW);   // Known-good project uses this, not EPD_Display()
 
+  // The known-good project waits before entering deep sleep.
   delay(1000);
   Serial.println("EPD: sleep");
   EPD_Sleep();
@@ -207,7 +211,7 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  // Enable the CrowPanel power rails.
+  // Preserve the exact power/enable setup from the known-good weather sketch.
   pinMode(41, OUTPUT);
   digitalWrite(41, HIGH);
 
@@ -216,7 +220,9 @@ void setup() {
 
   EPD_GPIOInit();
 
-  // Clear once at boot before downloading the first bitmap.
+  // Diagnostic clear on boot. This deliberately follows the successful
+  // weather project so we can prove the panel is physically refreshing
+  // before the network image is sent.
   Serial.println("EPD boot test: clearing display to white...");
   EPD_RESET();
   delay(100);

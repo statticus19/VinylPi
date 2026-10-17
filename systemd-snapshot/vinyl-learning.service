@@ -1,0 +1,29 @@
+[Unit]
+Description=Vinyl learning web interface and local fingerprint fallback
+After=network.target icecast2.service
+
+[Service]
+Type=simple
+# Use the same account and project directory as vinyl-orchestrator.service.
+User=vinyl
+WorkingDirectory=/home/vinyl/pi_epaper
+EnvironmentFile=/home/vinyl/pi_epaper/learning.env
+ExecStart=/home/vinyl/pi_epaper/.venv-learning/bin/python /home/vinyl/pi_epaper/learning_service.py
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=25
+UMask=0077
+Environment=PYTHONUNBUFFERED=1
+Environment=OPENBLAS_NUM_THREADS=1
+Environment=OMP_NUM_THREADS=1
+MemoryMax=384M
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/vinyl/pi_epaper/state/learning
+
+[Install]
+WantedBy=multi-user.target

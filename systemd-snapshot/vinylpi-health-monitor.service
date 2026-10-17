@@ -1,0 +1,22 @@
+[Unit]
+Description=VinylPi critical-service health check and Discord alert delivery
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=vinyl
+WorkingDirectory=/home/vinyl/music-bridge
+EnvironmentFile=-/etc/music-bridge-discord-bot.env
+Environment=PYTHONPATH=/home/vinyl/music-bridge
+Environment=VINYLPI_HEALTH_DB=/var/lib/vinylpi-health/incidents.db
+Environment=VINYLPI_NOTIFICATION_DB=/var/lib/vinylpi-dashboard/notifications.db
+ExecStart=/home/vinyl/music-bridge/.venv/bin/python /home/vinyl/music-bridge/scripts/vinylpi_health_monitor.py
+StateDirectory=vinylpi-health
+StateDirectoryMode=0700
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/lib/vinylpi-dashboard
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStartSec=150

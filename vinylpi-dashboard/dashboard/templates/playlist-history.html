@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Playlist Job History · VinylPi{% endblock %}
+{% block body %}
+<section class="playlist-head"><p class="eyebrow">MUSIC BRIDGE</p><h1>Playlist Job History</h1><p>Read-only activity from the past 30 days. Jobs are never deleted by this page.</p><p><a href="/playlists">← Back to playlists</a></p></section>
+{% if request.query_params.get('message') == 'Discord message sent' %}<p class="playlist-notice" role="status">Discord message sent.</p>{% endif %}
+{% if groups %}{% for group in groups %}<section class="playlist-history-day"><h2>{{ group.date }}</h2><div class="playlist-history-list">
+{% for j in group.jobs %}<article class="playlist-history-job"><div><strong>{{ j.title }}</strong><p>{{ j.mode|replace('_',' ') }} · {{ j.status|replace('_',' ') }} · {{ j.created_time }}</p><code>{{ j.job_id }}</code></div>
+<div class="playlist-history-actions"><button type="button" data-copy-id="{{ j.job_id }}">Copy ID</button><a href="/playlists?job_id={{ j.job_id }}">Open job</a><form method="post" action="/playlists/{{ j.job_id }}/send-discord" data-confirm-discord><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="return_to" value="history"><button type="submit">Send to Discord</button></form></div></article>{% endfor %}
+</div></section>{% endfor %}{% else %}<p>No playlist jobs were created in the past 30 days.</p>{% endif %}
+<script src="/static/playlist-history.js?v=1" defer></script>
+{% endblock %}

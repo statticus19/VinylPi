@@ -1,0 +1,29 @@
+Weather data: Open-Meteo, https://open-meteo.com/
+Weather data licence: CC BY 4.0, https://creativecommons.org/licenses/by/4.0/
+Weather data providers and models: https://open-meteo.com/en/docs
+Weather presentation has been adapted into a monochrome dashboard.
+
+Driving routes: openrouteservice / HeiGIT, https://openrouteservice.org/
+Road data: OpenStreetMap contributors, https://www.openstreetmap.org/copyright
+Geocoding: Pelias via HeiGIT; underlying data-source credits:
+https://github.com/pelias/pelias/blob/master/LICENSE.md
+
+Condition and car icons: drawn by this project's Python code.
+
+UK men's basketball schedule: UK Athletics official schedule (refreshed weekly),
+https://ukathletics.com/sports/mbball/schedule/
+University of Kentucky logo: UK Athletics; retained from the official site asset,
+https://storage.googleapis.com/ukathletics-com/2023/12/4696b854-kentucky_wildcats_logo.svg_.png
+UK marks remain the property of their respective owner.
+
+Listening data: Last.fm, https://www.last.fm/api
+Classic Red/Blue sprites: PokeAPI's sprite collection,
+https://github.com/PokeAPI/sprites
+Pokémon species names: PokeAPI data,
+https://github.com/PokeAPI/pokeapi/blob/master/data/v2/csv/pokemon_species.csv
+Pokémon names and artwork remain the property of their respective owners.
+These assets are rendered as monochrome pixel art for this personal display.
+Basketball and sun/horizon icons: drawn by this project's Python code.
+
+Bundled italic font: DejaVu Sans Oblique, https://dejavu-fonts.github.io/
+See assets/fonts/LICENSE_DEJAVU for its copyright and permission notice.

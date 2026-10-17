@@ -1,0 +1,12 @@
+[Unit]
+Description=Vinyl Local Speaker Passthrough
+After=sound.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/alsaloop -C hw:1,0 -P hw:1,0 -t 30000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

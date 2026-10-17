@@ -1,0 +1,25 @@
+[Unit]
+Description=VinylPi restricted guest listening page
+Wants=network-online.target
+After=network-online.target icecast2.service
+
+[Service]
+Type=simple
+User=vinyl
+WorkingDirectory=/home/vinyl/vinylpi-guest
+ExecStart=/usr/bin/python3 /home/vinyl/vinylpi-guest/guest_player.py
+Restart=on-failure
+RestartSec=5
+ProtectSystem=strict
+ProtectHome=read-only
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+MemoryMax=150M
+
+[Install]
+WantedBy=multi-user.target

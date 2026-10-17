@@ -1,0 +1,23 @@
+[Unit]
+Description=Music Link Bridge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vinyl
+WorkingDirectory=/home/vinyl/music-bridge
+EnvironmentFile=/home/vinyl/music-bridge/.env
+ExecStart=/home/vinyl/music-bridge/.venv/bin/uvicorn music_bridge.app:app --host 127.0.0.1 --port 8765 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+StateDirectory=music-bridge
+Environment=MUSIC_BRIDGE_DB=/var/lib/music-bridge/jobs.db
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

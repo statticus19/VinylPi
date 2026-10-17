@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Playlists · VinylPi{% endblock %}
+{% block body %}
+<section class="playlist-head"><p class="eyebrow">MUSIC BRIDGE</p><h1>Playlists</h1><p>Track processing and review. Suggested matches can be changed; playlist creation requires explicit confirmation.</p></section>
+<section class="playlist-launcher" aria-labelledby="playlist-launcher-title">
+<h2 id="playlist-launcher-title">Start a Music Bridge workflow</h2>
+<p>Paste an Apple Music song, album, artist, or playlist link. Music Bridge handles the request on VinylPi.</p>
+<form method="post" action="/playlists/launch" data-playlist-launcher>
+<input type="hidden" name="csrf" value="{{ csrf }}">
+<input type="hidden" name="submission_key" value="{{ launcher_key }}">
+<label for="launcher-url">Apple Music URL</label>
+<input id="launcher-url" name="url" type="url" required maxlength="2048" placeholder="https://music.apple.com/us/playlist/…" pattern="https://music\.apple\.com/.*" autocomplete="off">
+<fieldset><legend>Choose a workflow</legend>
+<label><input type="radio" name="workflow" value="share" checked> Share MusicLink <small>Song, album, artist</small></label>
+<label><input type="radio" name="workflow" value="apple_video_plan"> Apple Music Video Playlist <small>Finish with the iPhone Resume Shortcut</small></label>
+<label><input type="radio" name="workflow" value="youtube_video_playlist"> YouTube Video Playlist <small>Review and create here</small></label>
+<label><input type="radio" name="workflow" value="soundiiz_transfer"> Transfer via Soundiiz <small>Generate handoffs here</small></label>
+</fieldset>
+<button type="submit">Start workflow</button>
+</form></section>
+<section class="playlist-lookup"><p><a href="/playlists/history">View full job history (past 30 days) →</a></p><h2>Active and recent playlist jobs</h2><p>Up to 12 jobs created in the past 48 hours, including completed jobs. View the past 30 days in Job History; older jobs remain available by ID.</p>
+{% if jobs %}<div class="playlist-jobs">{% for j in jobs %}<div class="playlist-job-cell"><a class="playlist-job {% if j.job_id == job_id %}playlist-job-active{% endif %}" href="/playlists?job_id={{ j.job_id }}"><strong>{{ j.title }}</strong><span>{{ j.mode|replace('_', ' ') }} · {{ j.status|replace('_',' ') }}</span><small>{{ j.processed }} / {{ j.total }} tracks · {{ j.job_id[:8] }}</small></a></div>{% endfor %}</div>{% else %}<p>No jobs found.</p>{% endif %}
+<details class="playlist-manual"><summary>Open a job by ID</summary><form method="get" action="/playlists"><label for="job_id">Job ID</label><input id="job_id" name="job_id" value="{{ job_id }}" required pattern="[0-9a-fA-F-]{36}"><button>Open</button></form></details></section>
+{% if message %}<p class="playlist-notice" role="status">{{ message }}</p>{% endif %}
+
+{% if job %}
+{# playlist-job-details-clean-v1: selected mode from recent list or detail response #}
+{% set selected_mode = (jobs|selectattr('job_id','equalto',job_id)|map(attribute='mode')|first)|default('',true) %}
+{% if not selected_mode %}{% set selected_mode = job.mode|default('',true) %}{% endif %}
+{% if not selected_mode %}{% set selected_mode = job.result.workflow|default('',true) %}{% endif %}
+<section class="playlist-job-detail-panel" id="playlist-job-details">
+<h3>Job details</h3>
+<p><strong>Workflow:</strong> {{ (selected_mode or 'Music Bridge playlist')|replace('_', ' ') }}</p>
+<p><strong>Status:</strong> {{ job.status|replace('_', ' ') }}</p>
+<p><strong>Full job ID</strong></p>
+<div class="playlist-resume-id"><input id="selected-playlist-job-id" readonly aria-label="Full playlist job ID" value="{{ job_id }}"><button type="button" data-copy-job="selected-playlist-job-id">Copy job ID</button></div>
+{% if selected_mode == 'apple_video_plan' %}
+<p><strong>Apple Music video playlist:</strong> {% if job.status == 'completed' %}Processing is complete. Run <strong>Resume Apple Music Video Playlist</strong> on your iPhone and paste this job ID to finish creating the playlist.{% else %}Wait for processing to complete, then run <strong>Resume Apple Music Video Playlist</strong> on your iPhone using this job ID.{% endif %}</p>
+{% endif %}
+<form method="post" action="/playlists/{{ job_id }}/send-discord" class="playlist-discord-form" data-confirm-discord>
+<input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="return_to" value="recent"><button type="submit">Send job to Discord</button>
+</form>
+</section>
+
+<section class="playlist-summary"><div><h2>{{ (jobs|selectattr('job_id','equalto',job_id)|map(attribute='title')|first)|default('Music Bridge job',true) }}</h2><p>Status: <strong>{{ job.status|replace('_',' ') }}</strong> · {% if soundiiz_parts %}{{ job.total }} source tracks{% else %}{{ job.processed }} / {{ job.total }} processed{% endif %}</p>{% if job.error %}<p>{{ job.error }}</p>{% endif %}</div><div><strong>{{ soundiiz_parts|length if soundiiz_parts else tracks|length }}</strong><span>{{ "Soundiiz parts" if soundiiz_parts else "tracks with candidates" }}</span></div></section>
+{% if not soundiiz_parts and job.status != 'awaiting_approval' %}<p class="playlist-notice">Review decisions are unavailable for this job's current status.</p>{% endif %}
+{% if soundiiz_parts %}
+<section class="playlist-soundiiz" aria-labelledby="soundiiz-title"><h2 id="soundiiz-title">Soundiiz transfer</h2>
+<p>Handoffs are prepared one part at a time. You choose the music service in Soundiiz. A ready link is not proof that the destination playlist was created.</p>
+{% for part in soundiiz_parts %}
+<article class="playlist-soundiiz-part">
+<div class="playlist-soundiiz-top"><div><h3>{{ part.title }}</h3><p>Tracks {{ part.first_track }}–{{ part.last_track }} · {{ part.track_count }} tracks</p></div><span class="playlist-pill">{{ 'Transferred (user confirmed)' if part.marked_transferred else part.status|replace('_',' ') }}</span></div>
+{% if part.marked_transferred %}<p>Destination: <strong>{{ part.transferred_to|default('Not specified', true) }}</strong>. User-confirmed; not independently verified.</p>
+{% if part.safe_url %}
+<div class="playlist-soundiiz-actions"><a class="playlist-soundiiz-link" href="{{ part.safe_url }}" target="_blank" rel="noopener noreferrer">Open saved Soundiiz link ↗</a></div>
+{% if not part.link_valid %}<p class="playlist-warning">This saved handoff link has expired and may no longer work in Soundiiz. Transfer confirmation remains saved; regeneration is disabled for completed parts.</p>{% endif %}
+{% else %}<p class="playlist-soundiiz-help">No saved Soundiiz link is available for this part.</p>{% endif %}
+{% elif part.status == 'generating' %}<p>Handoff request in progress. Refresh to check status; do not submit again.</p>
+{% else %}
+<div class="playlist-soundiiz-actions">
+{% if part.can_generate or (part.link_valid and not part.marked_transferred) %}
+<form method="post" action="/playlists/{{ job_id }}/soundiiz/{{ part.part_number }}/handoff"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" data-soundiiz-request>{{ 'Use existing handoff' if part.link_valid else 'Generate handoff' }}</button></form>
+{% endif %}
+{% if part.link_valid and part.safe_url %}<a class="playlist-soundiiz-link" href="{{ part.safe_url }}" target="_blank" rel="noopener noreferrer">Open in Soundiiz ↗</a>{% endif %}
+{% if part.can_regenerate %}<form method="post" action="/playlists/{{ job_id }}/soundiiz/{{ part.part_number }}/handoff"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="regenerate" value="yes"><button type="submit" data-soundiiz-regenerate>Explicitly regenerate handoff</button></form>{% endif %}
+</div>
+{% if part.status == 'uncertain' %}<p class="playlist-warning">Previous request outcome uncertain. Inspect Soundiiz before choosing to regenerate.</p>{% elif part.status == 'ready' and not part.link_valid %}<p class="playlist-warning">This handoff has expired. Regeneration is a new Soundiiz request.</p>{% endif %}
+{% if part.can_confirm %}<form class="playlist-soundiiz-confirm" method="post" action="/playlists/{{ job_id }}/soundiiz/{{ part.part_number }}/transferred"><input type="hidden" name="csrf" value="{{ csrf }}"><label>Destination service <input name="destination" required maxlength="50" placeholder="tidal, spotify, youtube_music…" pattern="[A-Za-z0-9_-]{2,50}"></label><button type="submit" data-soundiiz-confirm>Mark transferred</button></form><p class="playlist-soundiiz-help">Only confirm after completing the transfer in Soundiiz. This records your confirmation, not independent verification.</p>{% endif %}
+{% endif %}
+</article>
+{% endfor %}
+{% if job.result.consolidation_instructions %}<div class="playlist-soundiiz-guide"><h3>Combine the parts</h3><ol>{% for instruction in job.result.consolidation_instructions %}<li>{{ instruction }}</li>{% endfor %}</ol></div>{% endif %}
+</section>
+{% endif %}
+{% if job.status == 'awaiting_approval' and tracks %}
+<section class="playlist-creation-confirm"><h3>Create YouTube playlist</h3>
+<p>Uses the shown selections and suggestions in original track order. Tracks without a selection, and explicitly skipped tracks, are omitted. This creates a private YouTube playlist. Writes cannot be automatically retried if interrupted.</p>
+<form method="post" action="/playlists/{{ job_id }}/create-reviewed">
+<input type="hidden" name="csrf" value="{{ csrf }}">
+{# Server still requires the literal confirmation; the browser only sends it after the dialog is accepted. #}
+<input type="hidden" name="confirmation" value="">
+{% set counts = namespace(selected=0, skipped=0, unselected=0) %}{% for track in tracks %}{% if track.is_skipped %}{% set counts.skipped = counts.skipped + 1 %}{% elif track.selected %}{% set counts.selected = counts.selected + 1 %}{% else %}{% set counts.unselected = counts.unselected + 1 %}{% endif %}{% endfor %}
+<p class="playlist-review-counts">{{ counts.selected }} videos selected · {{ counts.skipped }} explicitly skipped · {{ counts.unselected }} without selections · {{ counts.skipped + counts.unselected }} total omitted</p>
+<button type="submit" data-create-playlist data-selected-count="{{ counts.selected }}" data-skipped-count="{{ counts.skipped }}" data-unselected-count="{{ counts.unselected }}" data-playlist-name="{{ (jobs|selectattr('job_id','equalto',job_id)|map(attribute='title')|first)|default('this playlist',true) }}">Create private YouTube playlist</button>
+</form></section>{% endif %}
+{% if tracks %}<p>Saved manual decisions: {{ (job.result.review_decisions or {})|length }} of {{ job.total }}. Suggestions aren't saved approvals.</p>{% endif %}
+{% for item in tracks %}
+<details class="playlist-track" id="track-{{ item.index }}"><summary class="playlist-track-header"><div><span class="playlist-track-no">Track {{ item.index + 1 }}</span><h3>{{ item.title }}</h3><p>{{ item.artists }}</p></div><span class="playlist-state">{% if item.is_skipped %}Skipped{% elif item.decision and item.selected %}Manually selected{% elif item.selected %}Suggested match{% else %}No selection · Will be omitted{% endif %}<span class="playlist-expand-hint"> · View alternatives</span></span>{% if item.selected %}<div class="playlist-current"><div><span class="playlist-track-no">{{ 'SUGGESTED · NOT MANUALLY APPROVED' if item.auto_suggested else 'SAVED SELECTION' }}</span><strong>{{ item.selected.title }}</strong><small>{{ item.selected.channel }} · {{ item.selected.official_label }}</small></div><a href="{{ item.selected.safe_url }}" target="_blank" rel="noopener noreferrer">Watch ↗</a></div>{% elif item.is_skipped %}<p class="playlist-current">This track is skipped.</p>{% else %}<p class="playlist-current">No video selected. This song will be omitted unless you choose one.</p>{% endif %}</summary>
+
+<div class="playlist-options"><p>Top {{ item.candidates|length }} of {{ item.candidate_count }} saved candidates. Choosing a video overrides the suggestion.</p>
+{% for c in item.candidates %}<div class="playlist-option"><div class="playlist-video"><strong>{{ c.title }}</strong><p>{{ c.channel }} · {{ c.duration or 'Duration unknown' }}</p><div class="playlist-embed" data-embed="{{ c.embed_url }}"><button type="button" class="playlist-load-embed" aria-label="Load video: {{ c.title }}">▶ Preview embedded video</button></div><p><span class="playlist-pill">{{ c.official_label }}</span> <span class="playlist-pill">{{ c.kind or 'Unknown type' }}</span>{% if c.rejection_reason %} <span class="playlist-pill playlist-warning">{{ c.rejection_reason|replace('_',' ') }}</span>{% endif %}</p><a href="{{ c.safe_url }}" target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a></div>{% if job.status == 'awaiting_approval' %}<form method="post" action="/playlists/{{ job_id }}/review"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="source_index" value="{{ item.index }}"><input type="hidden" name="action" value="approve"><input type="hidden" name="video_id" value="{{ c.video_id }}"><button type="submit" {% if item.selected and item.selected.video_id == c.video_id %}class="playlist-selected"{% endif %}>{{ 'Selected' if item.decision and item.decision.video_id == c.video_id else 'Choose video' }}</button></form>{% endif %}</div>{% endfor %}
+{% if job.status == 'awaiting_approval' %}<form class="playlist-skip" method="post" action="/playlists/{{ job_id }}/review"><input type="hidden" name="csrf" value="{{ csrf }}"><input type="hidden" name="source_index" value="{{ item.index }}"><input type="hidden" name="action" value="skip"><button type="submit">Skip this track</button></form>{% endif %}
+</div></details>
+{% endfor %}
+{% endif %}{% endblock %}

@@ -1,0 +1,5 @@
+# Install in .venv-learning; the existing orchestrator environment stays unchanged.
+numpy>=1.24,<3
+scipy>=1.10,<2
+shazamio>=0.8,<1
+audioop-lts>=0.2,<1; python_version >= "3.13"

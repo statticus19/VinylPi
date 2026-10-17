@@ -186,6 +186,8 @@ class FrameStore:
         self.bmp = self.png = b""
         self.etag = ""
         self.status = {}
+        self.started_at = time.time()
+        self.elecrow_last_seen = None
 
     def publish(self, image, status):
         bmp, png = io.BytesIO(), io.BytesIO()
@@ -207,10 +209,22 @@ def handler_for(store):
             with store.lock:
                 if route == "/display.bmp":
                     data, mime, tag = store.bmp, "image/bmp", store.etag
+                    if data and self.client_address[0] == os.environ.get("VINYLPI_ELECROW_IP", ""):
+                        store.elecrow_last_seen = time.time()
                 elif route == "/preview.png":
                     data, mime, tag = store.png, "image/png", ""
                 elif route == "/status":
-                    data, mime, tag = json.dumps(store.status).encode(), "application/json", ""
+                    now = time.time()
+                    last = store.elecrow_last_seen
+                    elapsed = now - (last if last is not None else store.started_at)
+                    timeout = 180
+                    physical = {
+                        "state": "online" if last is not None and elapsed <= timeout else
+                                 "offline" if elapsed > timeout else "unknown",
+                        "last_seen": last,
+                        "timeout_seconds": timeout,
+                    }
+                    data, mime, tag = json.dumps({**store.status, "physical_display": physical}).encode(), "application/json", ""
                 elif route == "/credits":
                     data, mime, tag = (ROOT / "CREDITS.txt").read_bytes(), "text/plain; charset=utf-8", ""
                 else:
@@ -294,6 +308,11 @@ class Providers:
                         "location": cfg.get("label", "Local weather")}
         self.weather_note = ""
 
+    def excluded_calendar_event(self, event):
+        titles = self.config.get('excluded_event_titles', ['Out of Office', 'GROW TRAINIG'])
+        title = ' '.join((event.get('summary') or '').split()).casefold()
+        return title in {' '.join(t.split()).casefold() for t in titles}
+
     def fetch_calendar(self):
         from google.oauth2.credentials import Credentials
         from google.auth.transport.requests import Request as GoogleRequest
@@ -324,7 +343,7 @@ class Providers:
                                       quote(calendar["id"], safe="") + "/events", params,
                                       {"Authorization": "Bearer " + creds.token})
                     items += [e for e in result.get("items", [])
-                              if e.get("status") != "cancelled" and not excluded_event(e)]
+                              if e.get("status") != "cancelled" and not self.excluded_calendar_event(e)]
                     if len(items) >= 3 or not result.get("nextPageToken"):
                         break
                     params["pageToken"] = result["nextPageToken"]

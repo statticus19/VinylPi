@@ -1,0 +1,13 @@
+[Unit]
+Description=Vinyl DarkIce Streaming Service
+After=icecast2.service sound.target
+Requires=icecast2.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/darkice -c /etc/darkice.cfg
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
