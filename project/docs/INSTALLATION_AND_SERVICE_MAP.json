@@ -1,0 +1,196 @@
+[
+  {
+    "unit": "alsaloop.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/alsaloop -C dsnoop:CARD=CODEC,DEV=0 -P hw:CARD=CODEC,DEV=0 -t 50000 -r 48000"
+    ],
+    "envfile": [],
+    "user": []
+  },
+  {
+    "unit": "darkice.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/darkice -c /etc/darkice.cfg"
+    ],
+    "envfile": [],
+    "user": []
+  },
+  {
+    "unit": "music-bridge.service",
+    "workdir": [
+      "/home/vinyl/music-bridge"
+    ],
+    "exec": [
+      "/home/vinyl/music-bridge/.venv/bin/uvicorn music_bridge.app:app --host 127.0.0.1 --port 8765 --no-access-log"
+    ],
+    "envfile": [
+      "/home/vinyl/music-bridge/.env"
+    ],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "pi-epaper.service",
+    "workdir": [
+      "/home/vinyl/pi_epaper"
+    ],
+    "exec": [
+      "/home/vinyl/pi_epaper/.venv/bin/python /home/vinyl/pi_epaper/display_service.py"
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "plex-vinyl-pipe.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/ffmpeg -re -i http://127.0.0.1:8000/vinyl -c copy -f mp3 -y \"/home/vinyl/Music/Vinyl/Vinyl Stream/Vinyl Stream/01 - Vinyl Stream.mp3\""
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "threadfin.service",
+    "workdir": [],
+    "exec": [
+      "/opt/threadfin/threadfin"
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinyl-hls.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/ffmpeg -hide_banner -loglevel error -f lavfi -i color=c=black:s=640x360:r=5 -i http://127.0.0.1:8000/vinyl -map 0:v -map 1:a -c:v libx264 -preset ultrafast -tune zerolatency -c:a copy -f hls -hls_time 2 -hls_list_size 5 -hls_flags delete_segments /var/www/html/vinyl/index.m3u8"
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinyl-learning.service",
+    "workdir": [
+      "/home/vinyl/pi_epaper"
+    ],
+    "exec": [
+      "/home/vinyl/pi_epaper/.venv-learning/bin/python /home/vinyl/pi_epaper/learning_service.py"
+    ],
+    "envfile": [
+      "/home/vinyl/pi_epaper/learning.env"
+    ],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinyl-orchestrator.service",
+    "workdir": [
+      "/home/vinyl/vinyl_orchestrator"
+    ],
+    "exec": [
+      "/usr/bin/python3 /home/vinyl/vinyl_orchestrator/orchestrator.py"
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinyl-passthrough.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/alsaloop -C hw:1,0 -P hw:1,0 -t 30000"
+    ],
+    "envfile": [],
+    "user": []
+  },
+  {
+    "unit": "vinyl-stream.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/darkice -c /etc/darkice.cfg"
+    ],
+    "envfile": [],
+    "user": []
+  },
+  {
+    "unit": "vinylpi-boot-notify.service",
+    "workdir": [
+      "/home/vinyl/music-bridge"
+    ],
+    "exec": [
+      "/home/vinyl/music-bridge/.venv/bin/python /home/vinyl/music-bridge/scripts/vinylpi_boot_notify.py"
+    ],
+    "envfile": [
+      "/etc/music-bridge-discord-bot.env"
+    ],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinylpi-control.service",
+    "workdir": [],
+    "exec": [
+      "/usr/bin/python3 /usr/local/libexec/vinylpi-control-server"
+    ],
+    "envfile": [],
+    "user": [
+      "root"
+    ]
+  },
+  {
+    "unit": "vinylpi-dashboard.service",
+    "workdir": [
+      "/home/vinyl/vinylpi-dashboard"
+    ],
+    "exec": [
+      "/home/vinyl/vinylpi-dashboard/.venv/bin/uvicorn dashboard.main:app --host 127.0.0.1 --port 8780"
+    ],
+    "envfile": [
+      "/etc/vinylpi-dashboard.env"
+    ],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinylpi-guest-player.service",
+    "workdir": [
+      "/home/vinyl/vinylpi-guest"
+    ],
+    "exec": [
+      "/usr/bin/python3 /home/vinyl/vinylpi-guest/guest_player.py"
+    ],
+    "envfile": [],
+    "user": [
+      "vinyl"
+    ]
+  },
+  {
+    "unit": "vinylpi-health-monitor.service",
+    "workdir": [
+      "/home/vinyl/music-bridge"
+    ],
+    "exec": [
+      "/home/vinyl/music-bridge/.venv/bin/python /home/vinyl/music-bridge/scripts/vinylpi_health_monitor.py"
+    ],
+    "envfile": [
+      "-/etc/music-bridge-discord-bot.env"
+    ],
+    "user": [
+      "vinyl"
+    ]
+  }
+]

@@ -1,0 +1,20 @@
+[Unit]
+Description=VinylPi Restricted Service Control Broker
+Requires=vinylpi-control.socket
+After=vinylpi-control.socket
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/local/libexec/vinylpi-control-server
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX
+UMask=0077

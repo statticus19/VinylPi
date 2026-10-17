@@ -1,0 +1,25 @@
+# Credentials, identities, runtime data
+.env
+.env.*
+!.env.example
+secrets.h
+credentials.json
+token.json
+token.json.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+state/
+backups/
+logs/
+__pycache__/
+.pytest_cache/
+.venv/
+.venv-*/
+node_modules/
+*.py[cod]
+.DS_Store

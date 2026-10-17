@@ -1,0 +1,16 @@
+VinylPi public source GitHub upload kit
+
+Repository: statticus19/VinylPi
+Target: public-release-review (created, currently private; main left intact)
+
+1. Extract the ZIP to a local Windows folder.
+2. Install Git for Windows and Python 3 if not already installed.
+3. In PowerShell opened in the extracted folder, run:
+   powershell -ExecutionPolicy Bypass -File .\PUSH-REVIEW-BRANCH.ps1
+4. Sign into GitHub if prompted.
+5. Confirm the resulting branch at the URL printed by the script.
+
+Safety: the script only stages and pushes to the named review branch.
+It uses a fresh temporary checkout and does not alter the Pi or main.
+If the source audit fails, it stops before cloning or pushing.
+This is review-source, not a verified one-click installer.

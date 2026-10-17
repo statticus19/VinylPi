@@ -1,0 +1,11 @@
+[Unit]
+Description=Check VinylPi critical service health once per minute
+
+[Timer]
+OnBootSec=6min
+OnUnitActiveSec=1min
+AccuracySec=15s
+Unit=vinylpi-health-monitor.service
+
+[Install]
+WantedBy=timers.target

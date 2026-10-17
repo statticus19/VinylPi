@@ -1,0 +1,12 @@
+[Unit]
+Description=VinylPi Restricted Local Control Socket
+
+[Socket]
+ListenStream=/run/vinylpi-control.sock
+SocketUser=vinyl
+SocketGroup=vinyl
+SocketMode=0600
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

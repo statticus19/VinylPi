@@ -1,0 +1,77 @@
+#!/usr/bin/python3
+"""Systemd socket-activated restricted control broker. Root-owned, no network port.
+
+Only the vinyl UNIX account can connect; all operations are hardcoded.
+Never execute user-provided shell commands or accept arbitrary service names.
+"""
+import os
+import socket
+import struct
+import subprocess
+import syslog
+import threading
+
+APPROVED = frozenset({
+    'alsaloop.service', 'darkice.service', 'icecast2.service',
+    'music-bridge.service', 'pi-epaper.service', 'plex-vinyl-pipe.service',
+    'plexmediaserver.service', 'threadfin.service', 'vinyl-hls.service',
+    'vinyl-learning.service', 'vinyl-orchestrator.service',
+})
+VINYL_UID = __import__('pwd').getpwnam('vinyl').pw_uid
+
+
+def perform(command):
+    if command == 'reboot':
+        # --no-block allows the socket response to reach the browser before shutdown.
+        argv = ['/usr/bin/systemctl', 'reboot', '--no-block']
+        action = 'reboot'
+    elif command.startswith('restart ') and command[8:] in APPROVED:
+        unit = command[8:]
+        argv = ['/usr/bin/systemctl', 'restart', unit]
+        action = 'restart ' + unit
+    else:
+        syslog.syslog(syslog.LOG_WARNING, 'vinylpi-control rejected unauthorized action')
+        return b'ERROR denied\n'
+    try:
+        result = subprocess.run(argv, capture_output=True, timeout=55, check=False)
+        successful = result.returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        successful = False
+    syslog.syslog(syslog.LOG_NOTICE if successful else syslog.LOG_WARNING,
+                  'vinylpi-control action=%s success=%s' % (action, successful))
+    return b'OK\n' if successful else b'ERROR failed\n'
+
+
+def main():
+    listener = socket.socket(fileno=3)  # systemd passes listening FD as 3
+    if int(os.getenv('LISTEN_FDS', '0')) != 1:
+        raise RuntimeError('Service must be socket activated')
+    while True:
+        connection, _ = listener.accept()
+        with connection:
+            connection.settimeout(65)
+            try:
+                # Linux SO_PEERCRED: pid, uid, gid
+                _pid, uid, _gid = struct.unpack('3i', connection.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
+                if uid != VINYL_UID:
+                    connection.sendall(b'ERROR denied\n')
+                    continue
+                request = bytearray()
+                while len(request) <= 120 and b'\n' not in request:
+                    data = connection.recv(121 - len(request))
+                    if not data:
+                        break
+                    request.extend(data)
+                if b'\n' not in request or len(request) > 120:
+                    connection.sendall(b'ERROR malformed\n')
+                    continue
+                command = request.split(b'\n', 1)[0].decode('ascii')
+                connection.sendall(perform(command))
+            except (OSError, ValueError, UnicodeError):
+                try:
+                    connection.sendall(b'ERROR malformed\n')
+                except OSError:
+                    pass
+
+if __name__ == '__main__':
+    main()

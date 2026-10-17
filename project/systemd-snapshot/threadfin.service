@@ -1,0 +1,12 @@
+[Unit]
+Description=Threadfin Live TV Tuner Proxy for Plex
+After=network.target
+
+[Service]
+Type=simple
+User=vinyl
+ExecStart=/opt/threadfin/threadfin
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

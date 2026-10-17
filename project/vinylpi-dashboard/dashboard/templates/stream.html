@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Stream · VinylPi{% endblock %}
+{% block body %}
+<section class="page-heading"><span class="eyebrow">Live audio</span><h1>Vinyl Stream</h1><p class="muted">Listen to the turntable from anywhere on your private network.</p></section>
+<div class="stream-layout" id="stream-panel">
+  <section class="card stream-hero" aria-label="Now playing">
+    <div class="stream-art" id="stream-art" aria-label="Album artwork"><span aria-hidden="true">♫</span></div>
+    <div class="stream-details">
+      <span class="status" id="stream-status">Checking stream…</span>
+      <h2 id="stream-track">Waiting for vinyl</h2>
+      <p class="stream-artist" id="stream-artist">Nothing playing right now</p>
+      <p class="muted" id="stream-album"></p>
+      <div class="stream-controls"><button type="button" class="stream-button" id="stream-toggle" {% if not stream_ready %}disabled{% endif %}>Play stream</button><label for="stream-volume" class="small muted">Volume</label><input id="stream-volume" type="range" min="0" max="100" value="100" aria-label="Stream volume"><span id="stream-volume-label" class="small">100%</span></div>
+      <p class="muted small" id="stream-play-state">Uses the player in the header so playback continues when browsing supported pages.</p>
+    </div>
+  </section>
+  <section class="card stream-previous" aria-label="Previously played"><h2>Previously Played · Last.fm</h2><div class="stream-previous-track"><div id="stream-previous-art" class="stream-previous-art" aria-label="Previous album artwork">♫</div><div class="stream-previous-info"><strong id="stream-previous-title">Checking your scrobbles…</strong><span id="stream-previous-artist" class="stream-previous-artist"></span><span id="stream-previous-album" class="muted small"></span><span id="stream-previous-message" class="muted small" role="status"></span></div></div><p class="muted small">Most recent completed Last.fm scrobble across your devices; not necessarily the previous vinyl track.</p></section>
+  <section class="card stream-info"><h2>Stream details</h2><div class="stream-facts"><div><span>Availability</span><strong id="stream-availability">Checking…</strong></div><div><span>Quality</span><strong id="stream-bitrate">—</strong></div></div><h3>Local network address</h3><div class="stream-copy"><code id="stream-lan-url">{{lan_url}}</code><button type="button" id="stream-copy">Copy</button></div><p class="small muted" id="stream-copy-result" role="status"></p><h3>Sharing through Tailscale</h3><p class="small muted">Share the <strong>VinylPi device</strong> using Tailscale’s device-sharing invitation, not a full-tailnet membership invitation. The guest must accept the invitation and connect to Tailscale before opening the guest listening link. Your access policy should allow shared users only to TCP port 8781 on VinylPi.</p><div class="stream-copy"><code id="stream-guest-url">{{ guest_url|default('')|e }}</code><button type="button" id="stream-copy-guest">Copy guest link</button></div><p class="small muted" id="stream-guest-copy-result" role="status"></p><p class="small muted">The guest page has its own player and no dashboard login. <strong>Do not share your dashboard credentials.</strong> Before inviting anyone, verify with a separate shared guest account that ports 8780 and 8766 are blocked.</p></section>
+</div>
+<link rel="stylesheet" href="/static/stream.css?v=2">
+{% endblock %}

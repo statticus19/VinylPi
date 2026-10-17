@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}MusicLink · VinylPi<script src="/static/playlists.js?v=3" defer></script>
+{% endblock %}
+{% block body %}
+<section class="playlist-head"><p class="eyebrow">MUSIC BRIDGE</p><h1>Share MusicLink</h1><p>{{ share_title }}</p></section>
+<section class="playlist-summary" style="display:block"><h2>Cross-platform sharing text</h2>
+<textarea id="musiclink-share-text" readonly style="display:block;width:100%;box-sizing:border-box;min-height:230px;white-space:pre-wrap;padding:14px;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:8px">{{ share_text }}</textarea>
+<p><button class="playlist-share-copy" type="button" data-copy-share="musiclink-share-text">Copy sharing text</button></p>
+<p><a href="/playlists">← Back to playlists</a></p></section>
+<script src="/static/playlists.js?v=3" defer></script>
+{% endblock %}

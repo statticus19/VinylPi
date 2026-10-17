@@ -1,0 +1,23 @@
+# Generic structural example, NOT a copy of the working Pi settings.
+# Replace capture device with the value verified by `arecord -l` and your ALSA loop setup.
+[general]
+duration = 0
+bufferSecs = 5
+reconnect = yes
+
+[input]
+device = YOUR_ALSA_CAPTURE_DEVICE
+sampleRate = 48000
+bitsPerSample = 16
+channel = 2
+
+[icecast2-0]
+serverType = Icecast2
+bitrateMode = cbr
+format = mp3
+bitrate = 320
+server = 127.0.0.1
+port = 8000
+password = REPLACE_WITH_ICECAST_SOURCE_PASSWORD
+mountPoint = vinyl
+name = VinylPi

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Notifications · VinylPi{% endblock %}
+{% block body %}
+<section class="section"><p class="eyebrow">ACTIVITY</p><h1>Notifications</h1><p class="muted">Private audit history for the last 30 days. Only activity recorded after installation appears here. Discord messages sent directly by Music Bridge will be integrated in a later step.</p>
+{% if message %}<p role="status" class="playlist-notice">{{ message }}</p>{% endif %}
+<div class="playlist-lookup"><h2>Send a Discord message</h2><p>Send a private DM to the recipient already configured for VinylPi. Do not include passwords or access tokens.</p><form method="post" action="/notifications/send"><input type="hidden" name="csrf" value="{{csrf}}"><label for="discord-message">Message (1–1200 characters)</label><textarea style="display:block;box-sizing:border-box;width:100%;max-width:850px;min-height:100px;background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:12px" id="discord-message" name="message" maxlength="1200" required></textarea><button style="margin-top:12px" type="submit">Send private Discord message</button></form></div>
+<h2>Discord activity</h2><p class="muted small">Dashboard-sent messages and delivery results. Automatic Music Bridge messages are not yet included.</p>
+{% if discord_events %}<div class="playlist-lookup">{% for ev in discord_events %}<div style="padding:12px 0;border-bottom:1px solid var(--line)"><strong>{{ev.status|capitalize}}</strong> · <small>{{ev.when}} · {{ev.source}}</small><p style="white-space:pre-wrap;overflow-wrap:anywhere">{{ev.content}}</p></div>{% endfor %}</div>{% else %}<p class="muted">No recorded dashboard Discord messages yet.</p>{% endif %}
+<h2>Login history</h2><p class="muted small">Includes successful logins, unsuccessful attempts, rate-limit rejections, and logouts. Guest-player access will be added when that page exists.</p>
+{% if login_events %}<div class="playlist-lookup">{% for ev in login_events %}<div style="padding:10px 0;border-bottom:1px solid var(--line)"><strong>{{ev.status|replace('_',' ')|capitalize}}</strong> · {{ev.actor}} · <code>{{ev.client_ip}}</code> <small> — {{ev.when}}</small></div>{% endfor %}</div>{% else %}<p class="muted">No recorded login events yet.</p>{% endif %}
+{% if system_events %}<h2>System activity</h2><div class="playlist-lookup">{% for ev in system_events %}<p>{{ev.when}} · {{ev.status}} · {{ev.content}}</p>{% endfor %}</div>{% endif %}
+</section>
+{% endblock %}

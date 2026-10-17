@@ -1,0 +1,13 @@
+[Unit]
+Description=Plex Vinyl Named Pipe Feeder
+After=icecast2.service darkice.service
+
+[Service]
+Type=simple
+User=vinyl
+ExecStart=/usr/bin/ffmpeg -re -i http://127.0.0.1:8000/vinyl -c copy -f mp3 -y "/home/vinyl/Music/Vinyl/Vinyl Stream/Vinyl Stream/01 - Vinyl Stream.mp3"
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

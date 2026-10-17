@@ -1,0 +1,33 @@
+{% extends 'base.html' %}{% block title %}E-Paper Display · VinylPi{% endblock %}{% block body %}
+<section class="section"><div class="section-heading"><div><div class="eyebrow">Hardware & rendering</div><h1>E-Paper Display</h1></div><span id="ep-health" class="status standby" role="status">Checking service…</span></div>
+<p class="muted small">Preview of the Pi's 400 × 300 rendered image. Settings below affect the rendering service, not the ESP32 firmware.</p></section>
+<div class="ep-layout"><section class="section ep-preview-panel"><div class="section-heading"><h2>Rendered screen</h2><span class="muted small">Auto-updates every 30 seconds</span></div><div class="ep-image-wrap"><img id="ep-preview" src="/display/api/preview" alt="Current monochrome 400 by 300 e-paper image rendered on the Pi" width="400" height="300"></div><p id="ep-preview-error" class="muted small" role="status"></p><button id="ep-refresh" type="button" class="quiet-button">Refresh preview</button></section>
+<section class="section ep-status-panel"><div class="section-heading"><h2>Renderer information</h2></div><dl class="ep-values"><div><dt>Physical e-paper panel</dt><dd><span id="ep-physical" class="status warning">Unknown</span></dd></div><div><dt>Last panel contact</dt><dd id="ep-last-contact">—</dd></div><div><dt>Screen mode</dt><dd id="ep-mode">—</dd></div><div><dt>Recognition</dt><dd id="ep-recognition">—</dd></div><div><dt>Last.fm</dt><dd id="ep-lastfm">—</dd></div><div><dt>Corner widget</dt><dd id="ep-corner">—</dd></div><div><dt>Last successful Last.fm poll</dt><dd id="ep-last-success">—</dd></div></dl></section></div>
+<section class="section"><div class="section-heading"><h2>Integration messages</h2></div><dl class="ep-values"><div><dt>Weather</dt><dd id="ep-weather">—</dd></div><div><dt>Calendar</dt><dd id="ep-calendar">—</dd></div><div><dt>Routing</dt><dd id="ep-routing">—</dd></div></dl><p class="muted small">A blank message indicates no reported error; it does not independently verify upstream service availability.</p></section>
+<section class="section ep-settings"><div class="section-heading"><h2>Display settings</h2></div>
+<p class="muted small">Save applies settings and restarts only the e-paper renderer. Current configuration is backed up first. Other VinylPi services are unaffected.</p>
+<div id="ep-settings-result" role="status" aria-live="polite" class="muted small"></div>
+<form id="ep-settings-form" data-csrf="{{csrf}}">
+<div class="ep-input-grid"><label>Idle timeout (seconds)<input type="number" name="idle_seconds" min="0" max="7200" step="1" required></label>
+<label>Last.fm polling (seconds)<input type="number" name="lastfm_poll_seconds" min="5" max="300" step="1" required></label>
+<label>Corner rotation (seconds)<input type="number" name="corner_seconds" min="60" max="86400" step="1" required></label></div>
+<fieldset><legend>Rotating corner</legend><label><input type="checkbox" name="enabled"> Enable corner rotation</label><div class="ep-checks">
+<label><input type="checkbox" name="uk"> UK Basketball</label><label><input type="checkbox" name="stats"> Last.fm stats</label>
+<label><input type="checkbox" name="sun"> Sunrise / sunset</label><label><input type="checkbox" name="pokemon"> Pokémon</label></div></fieldset>
+<h3>Google Calendars</h3><p class="muted small">Add a calendar ID and a label, enable or disable entries, or remove them from the display configuration. Removing an entry never deletes the calendar in Google.</p>
+<div id="ep-calendar-rows" class="ep-calendar-rows"></div>
+<div class="ep-input-grid"><label>Calendar ID<input id="ep-new-calendar-id" type="text" maxlength="300" autocomplete="off" placeholder="name@example.com"></label><label>Display label<input id="ep-new-calendar-label" type="text" maxlength="50" placeholder="Family"></label></div>
+<button type="button" id="ep-add-calendar" class="quiet-button">Add calendar</button>
+<p class="muted small">A new calendar ID is saved without querying Google. It must be shared with your authorized Google account. Check integration messages after applying.</p>
+<h3>Excluded calendar event titles</h3><p class="muted small">Only exact event titles are excluded (case-insensitive). Existing exclusions are preserved until changed.</p>
+<div id="ep-exclusion-rows" class="ep-calendar-rows"></div>
+<div class="ep-input-grid"><label>Event title to exclude<input id="ep-new-exclusion" type="text" maxlength="120" placeholder="Out of Office"></label></div>
+<button type="button" id="ep-add-exclusion" class="quiet-button">Add excluded title</button>
+<div class="ep-form-actions"><button type="submit" class="quiet-button" id="ep-save-settings">Save and apply</button><button type="button" class="quiet-button" id="ep-reload-settings">Discard edits</button></div></form></section>
+<section class="section"><div class="section-heading"><h2>Google authorization</h2></div>
+<p class="muted small">Renew read-only Google Calendar access without SSH. Your three calendar selections and exclusions are preserved. Your previous Google token remains available for recovery.</p>
+{% if request.query_params.get('google') == 'success' %}<p role="status">Google Calendar authorization completed successfully.</p>
+{% elif request.query_params.get('google') %}<p role="alert">Google authorization did not complete. Your previous token has been preserved; check service status before trying again.</p>{% endif %}
+<form method="post" action="/display/google/start"><input type="hidden" name="csrf" value="{{csrf}}"><button type="submit" class="quiet-button">Reauthorize Google Calendar</button></form></section>
+<script src="/static/display-manager.js?v=3" defer></script>
+{% endblock %}
