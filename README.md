@@ -1,6 +1,6 @@
 # VinylPi — Public source review
 
-VinylPi connects a Raspberry Pi to a turntable via a USB audio interface, recognizes tracks, scrobbles to Last.fm, streams audio over Icecast, generates a 400×300 BMP for an Elecrow CrowPanel ESP32-S3, and provides a web dashboard and playlist integrations.
+VinylPi connects a Raspberry Pi to a turntable via a USB audio interface, recognizes tracks, scrobbles to Last.fm, streams audio over Icecast, generates a 400×300 BMP for an Elecrow E-paper Display ESP32-S3, and provides a web dashboard and playlist integrations.
 
 **Status:** Offline-reviewed source snapshot, not a turnkey release or installation-tested package. See [`docs/PUBLICATION-DECISION.md`](docs/PUBLICATION-DECISION.md) and [`docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md`](docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md). No live installation test was requested or performed. No Synology NAS management components are included in the public dashboard.
 
@@ -23,15 +23,3 @@ VinylPi connects a Raspberry Pi to a turntable via a USB audio interface, recogn
 3. Install the appropriate system packages, Python environments and firmware libraries before enabling any service. The bundled `systemd-snapshot/` files describe an existing Pi and must not be installed verbatim.
 4. Run read-only checks: `python3 tools/install_preflight.py` and `python3 tools/prepublish_check.py`. The regression tests are `python3 -m pytest -q tests/` in an isolated environment with testing dependencies installed.
 5. Treat NAS management as intentionally absent. Preserve personal NAS integrations in a separate, encrypted private backup.
-
-## Offline tests and limitations
-
-The test suite exercises NAS-free dashboard login/authenticated route boundaries, broker control constraints, and configuration helpers. Passing tests does not establish that audio hardware, Shazam, Icecast, Plex/Threadfin, OAuth, Discord, or the CrowPanel behave correctly when freshly deployed. End users are responsible for adapting and securing their installations. See the documented installation gaps.
-
-## Third-party artwork
-
-Pokemon sprites and university logos are not bundled. Use the optional asset installer/documentation, or disable the corresponding panels via `corner.pokemon: false` and `corner.uk: false`. Install DejaVu fonts from your OS package manager. Dashboard artwork from the original Pi snapshot needs provenance/permission verification before a public repo is released.
-
-## Publication security
-
-The original repository history requires full secret and license scanning before changing repo visibility. A partial content-screening report is in [`docs/HISTORY-CONTENT-AUDIT.md`](docs/HISTORY-CONTENT-AUDIT.md). Change passwords/tokens if they were ever embedded in other files or backups. This package is not an encrypted private backup.
