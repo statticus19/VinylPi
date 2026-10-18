@@ -2,7 +2,7 @@
 
 VinylPi connects a Raspberry Pi to a turntable via a USB audio interface, recognizes tracks, scrobbles to Last.fm, streams audio over Icecast, generates a 400×300 BMP for an Elecrow E-paper Display ESP32-S3, and provides a web dashboard and playlist integrations.
 
-**Status:** Offline-reviewed source snapshot, not a turnkey release or installation-tested package. See [`docs/PUBLICATION-DECISION.md`](docs/PUBLICATION-DECISION.md) and [`docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md`](docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md). No live installation test was requested or performed. No Synology NAS management components are included in the public dashboard.
+**Status:** Offline-reviewed source snapshot, not a turnkey release or installation-tested package. See [`docs/PUBLICATION-DECISION.md`](docs/PUBLICATION-DECISION.md) and [`docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md`](docs/OFFLINE-VALIDATION-AND-LIMITATIONS.md).
 
 ## Components
 
