@@ -7,7 +7,7 @@ The following were deliberately withheld from this public staging candidate:
 - `pi_epaper/assets/uk_logo.png`: university trademark/logo; requires permission or replacement.
 - `pi_epaper/assets/fonts/DejaVuSans-Oblique.ttf`: redistribution license/attribution must be verified before adding; users can install a system font or use the appropriately licensed font. No font binary is included in this package.
 
-The E-paper code still refers to the Pokémon sprites, university logo and names file, so those optional panels are **not yet self-contained** in this public package. Missing assets may require disabling the affected panels or supplying user-owned files in a local-only directory. Do not assert these features work in a clean installation until tested.
+The E-paper code still refers to the Pokémon sprites, university logo and names file, so those optional panels are **not yet self-contained** in this public package. Missing assets may require disabling the affected panels or supplying user-owned files in a local-only directory.
 
 Album covers and additional streamed artwork remain dynamic user/runtime content, not bundled assets.
 
@@ -15,4 +15,4 @@ See [OPTIONAL-EPAPER-ASSETS.md](OPTIONAL-EPAPER-ASSETS.md) for source links, opt
 
 ## Audfprint vendor source
 
-`pi_epaper/learning/vendor/audfprint/` is sourced from `dpwe/audfprint` at commit `cb03ba99feafd41b8874307f0f4e808a6ce34362`. Its upstream MIT `LICENSE` was fetched and added here. Review other third-party licensing before publishing.
+`pi_epaper/learning/vendor/audfprint/` is sourced from `dpwe/audfprint` at commit `cb03ba99feafd41b8874307f0f4e808a6ce34362`. Its upstream MIT `LICENSE` was fetched and added here.
