@@ -14,22 +14,6 @@ The API is independent of the triggering device so Android/Windows/browser clien
 - Compact SQLite history with 90-day/1,000-record retention, at most 20 pending jobs, and a 32 MiB main database ceiling. DELETE journal mode avoids unbounded WAL growth; main DB plus journal fits within the intended 75 MiB budget. Permanent mapping rows are preserved. When essential state fills the database, pause writes rather than prune mappings.
 - Private HTTPS access through Tailscale Serve, plus local bearer authentication.
 
-## What is not yet implemented
-
-- Automatically turning an Apple playlist share URL into its complete track list. The first iOS path uses **Get Playlist** / **Get Songs in Playlist** to select a playlist already in your Music library and read its metadata. It may require you to select the playlist and supply its title.
-- A signed, installable `.shortcut` file. Build the actions in `IOS_PLAYLIST_SETUP.md`; their exact names can vary by iOS release.
-- Direct TIDAL/YouTube audio and video playlist connectors and destination OAuth setup. These remain part of the agreed plan. TIDAL's current official OpenAPI specification explicitly accepts `videos` in playlist item additions (up to 50 per request); account access still needs a live test.
-- Artist-page matching, automated sync, or updates to existing copies.
-
-Apple music-video creation is performed by iOS using your existing subscription. You successfully tested both one and multiple native video items. Matching, native Store-ID rehydration, and source extraction still need an end-to-end device test. A metadata result is not proof that the video is playable in your Apple Music account.
-
-## Live checks performed during development
-
-- Public Apple search plus the actual worker matched **Paramore — Still Into You**, Store ID `1021726093`.
-- Public Apple search returned no videos for the tested **Thrice — Black Honey** query; absence is reported, not replaced with audio.
-- Soundiiz accepted a one-track request and returned a successful temporary Spotify import handoff.
-- 23 automated tests cover hostile URLs, API authentication, ordered matching/skips/duplicates, job retries/conflicts, restart behavior, retention and mapping preservation, and client creation acknowledgement. Tests use mock destinations; no Spotify/TIDAL/YouTube account playlist was written.
-
 ## 1. Pi readiness check
 
 Copy the archive to the Pi and extract it in your home folder. For the existing `vinyl` account:
