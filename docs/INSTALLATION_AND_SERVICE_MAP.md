@@ -40,11 +40,3 @@ The files under `systemd-snapshot/` mirror the original system and include machi
 ## Optional end-user validation on their own installation
 
 From the extracted repository root, an end user may run `python3 tools/install_preflight.py`. It is read-only, lists requirements and external tools, returns nonzero on missing items, and never loads configuration values. Run Python compilation and `pytest` in isolated virtual environments. Next, check all service `EnvironmentFile`, `WorkingDirectory`, `ExecStart`, socket access controls, mounts, and overrides **against that test installation**. Validate audio signal, Last.fm writes (with a throwaway test), BMP updates, auth/guest separation, and recovery after reboot.
-
-## Known blockers
-
-- No reproducible install has been executed on a clean Pi.
-- Source/snapshot may have site-specific paths and missing non-Python executables (Threadfin/Plex).
-- Dashboard smoke tests cover only basic routes, not all integrations.
-- Dashboard assets' redistribution rights remain unresolved.
-- Private full-disk backup and restoration still need to be performed independently.
